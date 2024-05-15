@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CC05D8CC-9DBC-403E-A485-CE963C8A7592}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GqlProduct", "GqlProduct\GqlProduct.csproj", "{F135B549-70D8-4530-9504-9E9DE5A3574F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GqlCustomer", "GqlCustomer\GqlCustomer.csproj", "{78BCD12D-72E8-4BAD-B6C6-990942A0C8B1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F135B549-70D8-4530-9504-9E9DE5A3574F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F135B549-70D8-4530-9504-9E9DE5A3574F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F135B549-70D8-4530-9504-9E9DE5A3574F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F135B549-70D8-4530-9504-9E9DE5A3574F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78BCD12D-72E8-4BAD-B6C6-990942A0C8B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78BCD12D-72E8-4BAD-B6C6-990942A0C8B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78BCD12D-72E8-4BAD-B6C6-990942A0C8B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78BCD12D-72E8-4BAD-B6C6-990942A0C8B1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9BCD0E83-CD4B-4B87-B5F5-C67F7E3CCD09}
+	EndGlobalSection
+EndGlobal
