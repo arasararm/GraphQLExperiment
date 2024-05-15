@@ -1,4 +1,5 @@
 using GqlProduct.Models;
+using GqlProduct.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace GqlProduct
@@ -12,6 +13,9 @@ namespace GqlProduct
             // Add services to the container.
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<ProductContext>(options => options.UseSqlServer(connectionString));
+
+            builder.Services.AddScoped(typeof(IService<Category>), typeof(CategoryService));
+            builder.Services.AddScoped(typeof(IService<Product>), typeof(ProductService));
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

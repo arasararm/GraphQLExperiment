@@ -1,4 +1,5 @@
 ﻿using GqlCustomer.Models;
+using GqlCustomer.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,52 +10,40 @@ namespace GqlCustomer.Controllers
     [ApiController]
     public class CustomerController : ControllerBase
     {
-        private readonly CustomerContext _dbContext;
+        private readonly IService<Customer> _customerService;
 
-        public CustomerController(CustomerContext dbContext)
+        public CustomerController(IService<Customer> customerService)
         {
-            _dbContext = dbContext;
+            _customerService = customerService;
         }
 
         // GET: api/Customer
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
         {
-            if (_dbContext.Customers is null)
-            {
+            var result = await _customerService.Get();
+            if (result is null)
                 return NotFound();
-            }
-            return await _dbContext.Customers
-                .Include(c => c.Addresses)
-                .ToListAsync();
+
+            return Ok(result);
         }
 
         // GET api/Customer/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Customer>> GetCustomer(int id)
         {
-            if (_dbContext.Customers is null)
-            {
+            var result = await _customerService.Get(id);
+            if (result is null)
                 return NotFound();
-            }
-            var customer = await _dbContext.Customers
-                .Include(c => c.Addresses)
-                .FirstOrDefaultAsync(c => c.Id == id);
 
-            if (customer is null)
-            {
-                return NotFound();
-            }
-
-            return customer;
+            return Ok(result);
         }
 
         // POST api/Customer
         [HttpPost]
         public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
         {
-            _dbContext.Customers.Add(customer);
-            await _dbContext.SaveChangesAsync();
+            await _customerService.Post(customer);
 
             return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
         }
@@ -63,54 +52,24 @@ namespace GqlCustomer.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult> PutCustomer(int id, Customer customer)
         {
-            if (id != customer.Id)
+            var result = await _customerService.Put(id, customer);
+            if (!result.Success)
             {
-                return BadRequest();
-            }
-
-            _dbContext.Entry(customer).State = EntityState.Modified;
-
-            try
-            {
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException ex)
-            {
-                if (!CustomerExists(id))
-                {
-                    return NotFound(ex.Message);
-                }
+                if (string.IsNullOrWhiteSpace(result.ErrorMessage))
+                    return BadRequest();
                 else
-                {
-                    throw;
-                }
+                    return NotFound(result.ErrorMessage);
             }
-
             return NoContent();
-        }
-
-        private bool CustomerExists(int id)
-        {
-            return (_dbContext.Customers?.Any(c => c.Id == id)).GetValueOrDefault();
         }
 
         // DELETE api/Customer/5
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteCustomer(int id)
         {
-            if (_dbContext.Customers is null)
-            {
+            var result = await _customerService.Delete(id);
+            if (!result)
                 return NotFound();
-            }
-
-            var customer = await _dbContext.Customers.FindAsync(id);
-            if (customer is null)
-            {
-                return NotFound();
-            }
-
-            _dbContext.Customers.Remove(customer);
-            await _dbContext.SaveChangesAsync();
 
             return NoContent();
         }

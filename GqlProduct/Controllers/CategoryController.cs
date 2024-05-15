@@ -1,4 +1,5 @@
 ﻿using GqlProduct.Models;
+using GqlProduct.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,48 +10,40 @@ namespace GqlProduct.Controllers
     [ApiController]
     public class CategoryController : ControllerBase
     {
-        private readonly ProductContext _dbContext;
+        private readonly IService<Category> _categoryService;
 
-        public CategoryController(ProductContext dbContext)
+        public CategoryController(IService<Category> categoryService)
         {
-            _dbContext = dbContext;
+            _categoryService = categoryService;
         }
 
         // GET: api/Category
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
         {
-            if (_dbContext.Categories is null)
-            {
+            var result = await _categoryService.Get();
+            if(result is null)
                 return NotFound();
-            }
-            return await _dbContext.Categories.ToListAsync();
+
+            return Ok(result);
         }
 
         // GET api/Category/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Category>> GetCategory(int id)
         {
-            if (_dbContext.Categories is null)
-            {
+            var result = await _categoryService.Get(id);
+            if(result is null)
                 return NotFound();
-            }
-            var category = await _dbContext.Categories.FindAsync(id);
 
-            if (category is null)
-            {
-                return NotFound();
-            }
-
-            return category;
+            return Ok(result);
         }
 
         // POST api/Category
         [HttpPost]
         public async Task<ActionResult<Category>> PostCategory(Category category)
         {
-            _dbContext.Categories.Add(category);
-            await _dbContext.SaveChangesAsync();
+            await _categoryService.Post(category);
 
             return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, category);
         }
@@ -59,54 +52,24 @@ namespace GqlProduct.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult> PutCategory(int id, Category category)
         {
-            if (id != category.Id)
+            var result = await _categoryService.Put(id, category);
+            if (!result.Success)
             {
-                return BadRequest();
-            }
-
-            _dbContext.Entry(category).State = EntityState.Modified;
-
-            try
-            {
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException ex)
-            {
-                if (!CategoryExists(id))
-                {
-                    return NotFound(ex.Message);
-                }
+                if (string.IsNullOrWhiteSpace(result.ErrorMessage))
+                    return BadRequest();
                 else
-                {
-                    throw;
-                }
+                    return NotFound(result.ErrorMessage);
             }
-
             return NoContent();
-        }
-
-        private bool CategoryExists(int id)
-        {
-            return (_dbContext.Categories?.Any(c => c.Id == id)).GetValueOrDefault();
         }
 
         // DELETE api/Category/5
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteCategory(int id)
         {
-            if (_dbContext.Categories is null)
-            {
+            var result = await _categoryService.Delete(id);
+            if(!result)
                 return NotFound();
-            }
-
-            var category = await _dbContext.Categories.FindAsync(id);
-            if (category is null)
-            {
-                return NotFound();
-            }
-
-            _dbContext.Categories.Remove(category);
-            await _dbContext.SaveChangesAsync();
 
             return NoContent();
         }

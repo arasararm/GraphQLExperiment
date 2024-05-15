@@ -1,5 +1,6 @@
 ﻿using GqlProduct.Helper;
 using GqlProduct.Models;
+using GqlProduct.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,54 +11,45 @@ namespace GqlProduct.Controllers
     [ApiController]
     public class ProductController : ControllerBase
     {
-        private readonly ProductContext _dbContext;
+        private readonly IService<Product> _productService;
+        private readonly IService<Category> _categoryService;
 
-        public ProductController(ProductContext dbContext)
+        public ProductController(IService<Product> productService, IService<Category> categoryService)
         {
-            _dbContext = dbContext;
+            _productService = productService;
+            _categoryService = categoryService;
         }
 
         // GET: api/Product
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
-            if (_dbContext.Products is null)
-            {
+            var result = await _productService.Get();
+            if (result is null)
                 return NotFound();
-            }
-            return await _dbContext.Products
-                .Include(p => p.Category)
-                .ToListAsync();
+
+            return Ok(result);
         }
 
         // GET api/Product/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
-            if (_dbContext.Products is null)
-            {
+            var result = await _productService.Get(id);
+            if (result is null)
                 return NotFound();
-            }
-            var product = await _dbContext.Products
-                .Include(p => p.Category)
-                .FirstOrDefaultAsync(p => p.Id == id);
 
-            if (product is null)
-            {
-                return NotFound();
-            }
-
-            return product;
+            return Ok(result);
         }
 
         // POST api/Product
         [HttpPost]
         public async Task<ActionResult<Product>> PostProduct(AddEditProduct request)
         {
-            var category = await _dbContext.Categories.FindAsync(request.CategoryId);
-            var product = ProductMapper.Map(request, category);
-            _dbContext.Products.Add(product);
-            await _dbContext.SaveChangesAsync();
+            var productCategory = await _categoryService.Get(request.CategoryId);
+            var product = ProductMapper.Map(request, productCategory);
+
+            await _productService.Post(product);
 
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
@@ -66,57 +58,27 @@ namespace GqlProduct.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult> PutProduct(int id, AddEditProduct request)
         {
-            if (id != request.Id)
-            {
-                return BadRequest();
-            }
+            var productCategory = await _categoryService.Get(request.CategoryId);
+            var product = ProductMapper.Map(request, productCategory);
 
-            var category = await _dbContext.Categories.FindAsync(request.CategoryId);
-            var product = ProductMapper.Map(request, category);
-
-            _dbContext.Entry(product).State = EntityState.Modified;
-
-            try
+            var result = await _productService.Put(id, product);
+            if (!result.Success)
             {
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException ex)
-            {
-                if (!ProductExists(id))
-                {
-                    return NotFound(ex.Message);
-                }
+                if (string.IsNullOrWhiteSpace(result.ErrorMessage))
+                    return BadRequest();
                 else
-                {
-                    throw;
-                }
+                    return NotFound(result.ErrorMessage);
             }
-
             return NoContent();
-        }
-
-        private bool ProductExists(int id)
-        {
-            return (_dbContext.Products?.Any(p => p.Id == id)).GetValueOrDefault();
         }
 
         // DELETE api/Product/5
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteProduct(int id)
         {
-            if (_dbContext.Products is null)
-            {
+            var result = await _productService.Delete(id);
+            if (!result)
                 return NotFound();
-            }
-
-            var product = await _dbContext.Products.FindAsync(id);
-            if (product is null)
-            {
-                return NotFound();
-            }
-
-            _dbContext.Products.Remove(product);
-            await _dbContext.SaveChangesAsync();
 
             return NoContent();
         }

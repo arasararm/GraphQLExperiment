@@ -1,4 +1,5 @@
 using GqlCustomer.Models;
+using GqlCustomer.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace GqlCustomer
@@ -12,6 +13,8 @@ namespace GqlCustomer
             // Add services to the container.
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<CustomerContext>(options => options.UseSqlServer(connectionString));
+
+            builder.Services.AddScoped(typeof(IService<Customer>), typeof(CustomerService));
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
