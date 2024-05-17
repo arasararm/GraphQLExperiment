@@ -1,9 +1,10 @@
 ﻿using GqlProduct.Models;
+using GqlProduct.ViewModels.RequestModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace GqlProduct.Services
 {
-    public class ProductService : IService<Product>
+    public class ProductService : IProductService
     {
         private readonly ProductContext _dbContext;
 
@@ -12,35 +13,40 @@ namespace GqlProduct.Services
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Product>> Get()
+        public async Task<List<Product>> GetProducts()
         {
-            if (_dbContext.Products is null)
-                return null;
-
             return await _dbContext.Products
                 .Include(p => p.Category)
                 .ToListAsync();
         }
 
-        public async Task<Product> Get(int id)
+        public async Task<Product> GetProductById(int id)
         {
-            if (_dbContext.Products is null)
-                return null;
-
             return await _dbContext.Products
                 .Include(p => p.Category)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public async Task<Product> Post(Product model)
+        public async Task<Product> PostCareateProductAsync(ProductCreateRequestModel model)
         {
-            _dbContext.Products.Add(model);
+            var prod = new Product()
+            {
+                Description = model.Description,
+                Name = model.Name,
+                Price = model.Price,
+                Category = new Category()
+                {
+                    Name = model.Category.Name,
+                }
+            };
+
+            var entity = _dbContext.Products.Add(prod);
             await _dbContext.SaveChangesAsync();
 
-            return model;
+            return entity.Entity;
         }
 
-        public async Task<Result> Put(int id, Product model)
+        public async Task<Result> PutUpdateProductAsync(int id, Product model)
         {
             if (id != model.Id)
                 return new Result { Success = false };
@@ -61,7 +67,7 @@ namespace GqlProduct.Services
             return new Result { Success = true };
         }
 
-        public async Task<bool> Delete(int id)
+        public async Task<bool> DeleteProductDeleteAsync(int id)
         {
             if (_dbContext.Products is null)
                 return false;

@@ -1,6 +1,11 @@
+using Framework.Diagnostics.ExecutionEvents;
+using GqlCustomer.Configuration;
+using GqlCustomer.Extensions;
 using GqlCustomer.Models;
 using GqlCustomer.Services;
+using GqlCustomer.Types;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace GqlCustomer
 {
@@ -11,32 +16,31 @@ namespace GqlCustomer
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            var graphQlConfig = new GraphQLConfiguration();
+            builder.Configuration.GetSection("GraphQL").Bind(graphQlConfig);
+            // Add services to the container.
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-            builder.Services.AddDbContext<CustomerContext>(options => options.UseSqlServer(connectionString));
+            builder.Services.AddDbContextFactory<CustomerContext>(options => options.UseSqlServer(connectionString));
+            builder.Services.AddScoped<CustomerContext>(sp =>
+            sp.GetRequiredService<IDbContextFactory<CustomerContext>>().CreateDbContext());
 
-            builder.Services.AddScoped(typeof(IService<Customer>), typeof(CustomerService));
-
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddScoped(typeof(ICustomerService), typeof(CustomerService));
+            builder.Services
+                .AddSingleton(ConnectionMultiplexer.Connect(graphQlConfig.Redis!.Endpoint))
+                .AddGraphQLServer()
+                .AddDiagnosticEventListener<CustomExecutionEventListener>()
+                .AddQueryType<Query>()
+                .AddMutationType<Mutation>()
+                .AddMutationConventions(applyToAllMutations: true)
+                .InitializeOnStartup()
+                .AddProjections()
+                .AddFiltering()
+                .AddSorting()
+                .CustomPublishSchemaDefinition(graphQlConfig);
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
-
-            app.MapControllers();
-
+            app.MapGraphQL();
             app.Run();
         }
     }

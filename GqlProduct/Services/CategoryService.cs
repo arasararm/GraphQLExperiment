@@ -13,7 +13,7 @@ namespace GqlProduct.Services
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Category>> Get()
+        public async Task<IEnumerable<Category>> GetProducts()
         {
             if (_dbContext.Categories is null)
                 return null;
@@ -21,7 +21,7 @@ namespace GqlProduct.Services
             return await _dbContext.Categories.ToListAsync();
         }
 
-        public async Task<Category> Get(int id)
+        public async Task<Category> GetProductById(int id)
         {
             if (_dbContext.Categories is null)
                 return null;

@@ -1,9 +1,10 @@
 ﻿using GqlCustomer.Models;
+using GqlCustomer.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace GqlCustomer.Services
 {
-    public class CustomerService : IService<Customer>
+    public class CustomerService : ICustomerService
     {
         private readonly CustomerContext _dbContext;
 
@@ -12,35 +13,39 @@ namespace GqlCustomer.Services
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Customer>> Get()
+        public async Task<IEnumerable<Customer>> GetCustomersAsync()
         {
-            if (_dbContext.Customers is null)
-                return null;
-
             return await _dbContext.Customers
                 .Include(c => c.Addresses)
                 .ToListAsync();
         }
 
-        public async Task<Customer> Get(int id)
+        public async Task<Customer> GetCustomerByIdAsync(int id)
         {
-            if (_dbContext.Customers is null)
-                return null;
-
-            return await _dbContext.Customers
+            var res = await _dbContext.Customers
                 .Include(c => c.Addresses)
                 .FirstOrDefaultAsync(c => c.Id == id);
+
+            return res;
         }
 
-        public async Task<Customer> Post(Customer model)
+        public async Task<Customer> PostCustomerCreateAsync(CustomerCreateRequestModel model)
         {
-            _dbContext.Customers.Add(model);
+            var mod = new Customer()
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                BirthDate = model.BirthDate,
+                Phone = model.Phone,
+            };
+
+            var res = _dbContext.Customers.Add(mod);
             await _dbContext.SaveChangesAsync();
 
-            return model;
+            return res.Entity;
         }
 
-        public async Task<Result> Put(int id, Customer model)
+        public async Task<Result> PutCustomerUpdateAsync(int id, Customer model)
         {
             if (id != model.Id)
                 return new Result { Success = false };
@@ -61,7 +66,7 @@ namespace GqlCustomer.Services
             return new Result { Success = true };
         }
 
-        public async Task<bool> Delete(int id)
+        public async Task<bool> DeleteCustoemrDeleteAsync(int id)
         {
             if (_dbContext.Customers is null)
                 return false;
