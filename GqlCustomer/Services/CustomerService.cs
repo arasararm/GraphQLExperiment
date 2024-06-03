@@ -13,11 +13,9 @@ namespace GqlCustomer.Services
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Customer>> GetCustomersAsync()
+        public IQueryable<Customer> GetCustomersAsync()
         {
-            return await _dbContext.Customers
-                .Include(c => c.Addresses)
-                .ToListAsync();
+            return  _dbContext.Customers;
         }
 
         public async Task<Customer> GetCustomerByIdAsync(int id)

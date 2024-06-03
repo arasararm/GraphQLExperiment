@@ -20,8 +20,10 @@ namespace GqlCustomer
             builder.Configuration.GetSection("GraphQL").Bind(graphQlConfig);
             // Add services to the container.
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
             builder.Services.AddDbContextFactory<CustomerContext>(options => options.UseSqlServer(connectionString));
             builder.Services.AddScoped<CustomerContext>(sp =>
+
             sp.GetRequiredService<IDbContextFactory<CustomerContext>>().CreateDbContext());
 
             builder.Services.AddScoped(typeof(ICustomerService), typeof(CustomerService));
@@ -32,6 +34,8 @@ namespace GqlCustomer
                 .AddQueryType<Query>()
                 .AddMutationType<Mutation>()
                 .AddMutationConventions(applyToAllMutations: true)
+                .AddSubscriptionType<Subscription>()
+                .AddInMemorySubscriptions()
                 .InitializeOnStartup()
                 .AddProjections()
                 .AddFiltering()
@@ -39,6 +43,9 @@ namespace GqlCustomer
                 .CustomPublishSchemaDefinition(graphQlConfig);
 
             var app = builder.Build();
+
+            app.UseRouting();
+            app.UseWebSockets();
 
             app.MapGraphQL();
             app.Run();

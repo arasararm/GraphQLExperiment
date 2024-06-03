@@ -1,5 +1,6 @@
 ﻿using GqlCustomer.Models;
 using GqlCustomer.Services;
+using HotChocolate.Data.Filters;
 
 namespace GqlCustomer.Types
 {
@@ -8,10 +9,9 @@ namespace GqlCustomer.Types
         [UseProjection]
         [UseFiltering]
         [UseSorting]
-        public async Task<List<Customer>> GetCustomers([Service] ICustomerService customerService)
+        public IQueryable<Customer> GetCustomers([Service] ICustomerService customerService)
         {
-            var res = await customerService.GetCustomersAsync();
-            return res.ToList();
+            return customerService.GetCustomersAsync();
         }
 
         public async Task<Customer> GetCustomerById(int id, [Service] ICustomerService customerService)

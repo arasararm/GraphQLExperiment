@@ -1,14 +1,20 @@
 ﻿using GqlCustomer.Models;
 using GqlCustomer.Services;
 using GqlCustomer.ViewModels;
+using HotChocolate.Subscriptions;
 
 namespace GqlCustomer.Types
 {
     public class Mutation
     {
-        public async Task<Customer> PostProductCreate(CustomerCreateRequestModel product, [Service] ICustomerService customerService)
+        public async Task<Customer> PostProductCreate(
+            CustomerCreateRequestModel product,
+            [Service] ICustomerService customerService,
+            [Service] ITopicEventSender sender)
         {
-            return await customerService.PostCustomerCreateAsync(product);
+            var customer = await customerService.PostCustomerCreateAsync(product);
+            await sender.SendAsync("OnCareateCustomer", customer.Id);
+            return customer;
         }
 
         public async Task<Result> PutProductUpdate(int id, Customer product, [Service] ICustomerService customerService)
